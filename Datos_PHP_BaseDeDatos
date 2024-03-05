@@ -1,0 +1,60 @@
+<?php
+// Conexión a la base de datos (modifica las credenciales según tu configuración)
+$host = 'localhost';
+//$port = '5432';
+$dbname = 'prueba';
+$username = 'postgres';
+$password = 'postgres';
+
+
+// Función para generar una cadena aleatoria
+function generateRandomString($length) {
+    $characters = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ';
+    $randomString = '';
+    for ($i = 0; $i < $length; $i++) {
+        $randomString .= $characters[rand(0, strlen($characters) - 1)];
+    }
+    return $randomString;
+}
+
+
+// Crear conexión
+$conn = pg_connect("host=$host dbname=$dbname user=$username password=$password");
+
+// Verificar la conexión
+//if ($conn->connect_error) {
+//    die("Error de conexión: " . $conn->connect_error);
+//}
+
+if (!$conn) {
+    echo "Error al ejecutar la consulta.";
+    exit;
+}
+
+
+// Generar 1 millón de registros para la tabla Horario_c
+for ($i = 1; $i <= 1000000; $i++) {
+    $id_hor_a = generateRandomString(4); // Generar una cadena aleatoria de longitud 8
+    $horario_apertura = generateRandomString(5); // Generar una cadena aleatoria de longitud 13
+
+    //$sql = "INSERT INTO Horario_c (id_hor_c, horario_cierre) VALUES ('$id_hor_c', '$horario_cierre')";
+    $sql = "INSERT INTO Horario_a (id_hor_a, horario_apertura) VALUES ('$id_hor_a', '$horario_apertura')";
+    pg_query($conn,$sql);
+}
+
+// Generar 1 millón de registros para la tabla Horario_a
+//for ($i = 1; $i <= 1000000; $i++) {
+  //  $id_hor_a = generateRandomString(8); // Generar una cadena aleatoria de longitud 8
+    //$horario_apertura = generateRandomString(13); // Generar una cadena aleatoria de longitud 13
+
+    //$sql = "INSERT INTO Horario_a (id_hor_a, horario_apertura) VALUES ('$id_hor_a', '$horario_apertura')";
+    //pg_query($conn,$sql);
+//}
+
+echo "Se han insertado 1 millón de registros en cada tabla.";
+
+// Cerrar conexión
+$conn->close();
+
+
+?>
