@@ -1,42 +1,79 @@
-import logging
-import time
-import random
-import socket
+import os
+import csv
+import pandas as pd
+import psycopg2
 
-# Configuración básica de logging
-logging.basicConfig(level=logging.INFO, format='%(asctime)s %(message)s')
+# Probar version de pandas: print(pd.version)
+#Datos del ususario al que me voy a conectar
+dbname = "Syslog"
+user = "postgres"
+password = "1234"
+host = "10.209.202.208"
+port = "5432"
 
-# Dirección IP y puerto del servidor rsyslog
-RSYSLOG_SERVER = '127.0.0.1'
-RSYSLOG_PORT = 514
 
-# Función para enviar logs al servidor rsyslog
-def send_log_to_rsyslog(message):
-    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
-        sock.sendto(message.encode(), (RSYSLOG_SERVER, RSYSLOG_PORT))
+#Establecer la conexion:
+try:
+ conn = psycopg2.connect(
+  dbname=dbname,
+  user=user,
+  password=password,
+  host=host,
+  port=port, 
+ )
+ 
+ print ("Conexion exitosa")
 
-# Función para simular eventos similares a los de Cisco ASA
-def simulate_asa_logs():
-    while True:
-        timestamp = time.strftime('%b %d %H:%M:%S')
-        hostname = "ASA-1"
-        severity = random.choice(['%ASA-1-105010:', '%ASA-4-105023:', '%ASA-6-302013:'])
-        event_code = random.choice(['302013', '105010', '105023'])
-        src_ip = f"192.168.{random.randint(1, 255)}.{random.randint(1, 255)}"
-        dst_ip = f"10.0.{random.randint(1, 255)}.{random.randint(1, 255)}"
-        message = random.choice(['Built inbound TCP connection', 'Teardown TCP connection', 'Deny UDP'])
-        log_message = f'{timestamp} {hostname} {severity}{event_code}: {message} src={src_ip} dst={dst_ip}'
+ #Proceso de querys(consultas):
+ #cur se utiliza para generar comandos sql
+ cur = conn.cursor()
+
+ #Ejecutar la consulta sql para filtrar los datos:
+ #query = "SELECT id, receivedat, message FROM systemevents WHERE message LIKE '%TCP CONNECTION%';" #WHERE message LIKE '%TCP connection%'  
+ #query = "SELECT id, receivedat, message FROM systemevents WHERE message LIKE %s;"
+ query = "SELECT id, receivedat, message FROM systemevents WHERE message LIKE %s;"
+ pattern = '%TCP connection%'  # Patrón para buscar en el mensaje
+
+ cur.execute(query, (pattern,))#('idUsuario', 'fechaC', 'message'))
+
+#  #Obtener los resultados
+ rows = cur.fetchall()
+#  a=len(rows)
+#  b=rows[0]
+#  st=''.join(map(str,b))
+#  #print(b)
+#  c=st.split(" ")
+#  #print(c)
+#  p0= c[0]+" "+c[1]+" " +c[2]+" "+c[3]
+#  p1= c[4]+" "+c[5]
+#  print(p0)
+#  print(p1)
+ # Escribir los resultados en un archivo CSV
+ with open('resultados_filtrados.csv', 'w', newline='') as csvfile:
+    csv_writer = csv.writer(csvfile)
         
-        # Imprimir el mensaje de log antes de enviarlo
-        print("Mensaje de log:", log_message)
-        
-        # Envía el log al servidor rsyslog
-        send_log_to_rsyslog(log_message)
-        
-        # Registra el log localmente (opcional)
-        logging.info(log_message)
-        
-        time.sleep(random.uniform(0.1, 2))  # Simula intervalos de tiempo aleatorios
+    # Escribir el encabezado del archivo CSV
+    csv_writer.writerow(['ID', 'Fecha', 'Connection','Mensaje'])
 
-if _name_ == "_main_":
-    simulate_asa_logs()
+    for row in rows:
+      ID = row [0]
+      Fecha = row [0]
+      message = row [2]
+
+      data = message.split ()
+      Connection = ' '.join(data[:3])
+      Mensaje = ' '.join(data[4:])
+        
+    # Escribir los datos filtrados en el archivo CSV
+      csv_writer.writerow([ID, Fecha, Connection, Mensaje])
+      
+ 
+
+ #Cerrar conexiòn
+ cur.close()
+ conn.close()
+
+ print("Datos filtrados guardados en resultados_filtrados.csv")
+
+except psycopg2.Error as e:
+ print("Error al conectar a la base de datos", e)
