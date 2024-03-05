@@ -38,16 +38,7 @@ try:
 
 #  #Obtener los resultados
  rows = cur.fetchall()
-#  a=len(rows)
-#  b=rows[0]
-#  st=''.join(map(str,b))
-#  #print(b)
-#  c=st.split(" ")
-#  #print(c)
-#  p0= c[0]+" "+c[1]+" " +c[2]+" "+c[3]
-#  p1= c[4]+" "+c[5]
-#  print(p0)
-#  print(p1)
+
  # Escribir los resultados en un archivo CSV
  with open('resultados_filtrados.csv', 'w', newline='') as csvfile:
     csv_writer = csv.writer(csvfile)
